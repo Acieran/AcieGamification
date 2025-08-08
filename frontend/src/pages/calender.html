@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь смен - Энергетический Квест</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6a5acd;
+            --secondary: #9370db;
+            --day-shift: #4bcffa;
+            --night-shift: #575fcf;
+            --rest-day: #05c46b;
+            --free-day: #ffd32a;
+            --dark-bg: #2c2c54;
+            --darker-bg: #1e1e3c;
+            --light-text: #f7f1e3;
+            --header-height: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker-bg), var(--dark-bg));
+            color: var(--light-text);
+            min-height: 100vh;
+            padding-top: var(--header-height);
+            background-attachment: fixed;
+        }
+
+        /* Навигация */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(30, 30, 60, 0.95);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            height: var(--header-height);
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--light-text);
+        }
+
+        .logo-icon {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: var(--light-text);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            box-shadow: 0 0 10px rgba(106, 90, 205, 0.7);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(106, 90, 205, 0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--light-text);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Календарь */
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .calendar-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .calendar-controls {
+            background: rgba(44, 44, 84, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            height: fit-content;
+        }
+
+        .calendar-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title h2 {
+            font-size: 1.8rem;
+            color: var(--light-text);
+        }
+
+        .month-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: var(--darker-bg);
+            border: 1px solid var(--primary);
+            color: var(--light-text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .day-types {
+            margin-top: 30px;
+        }
+
+        .day-types h3 {
+            margin-bottom: 15px;
+            color: var(--light-text);
+            font-size: 1.3rem;
+        }
+
+        .type-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: move;
+        }
+
+        .type-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .calendar-grid {
+            background: rgba(44, 44, 84, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .weekday {
+            padding: 10px;
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 8px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1/1;
+            background: rgba(30, 30, 60, 0.5);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .day-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(106, 90, 205, 0.5);
+            border-color: var(--primary);
+            z-index: 2;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .day-number {
+            font-weight: bold;
+        }
+
+        .today .day-number {
+            background: var(--primary);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            gap: 3px;
+        }
+
+        .person-shift {
+            padding: 3px 5px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .shift-icon {
+            font-size: 0.9rem;
+        }
+
+        /* Цвета для типов дней */
+        .day-shift {
+            background-color: rgba(75, 207, 250, 0.3);
+            border-left: 3px solid var(--day-shift);
+        }
+
+        .night-shift {
+            background-color: rgba(87, 95, 207, 0.3);
+            border-left: 3px solid var(--night-shift);
+        }
+
+        .rest-day {
+            background-color: rgba(5, 196, 107, 0.3);
+            border-left: 3px solid var(--rest-day);
+        }
+
+        .free-day {
+            background-color: rgba(255, 211, 42, 0.3);
+            border-left: 3px solid var(--free-day);
+        }
+
+        .together {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: var(--primary);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            box-shadow: 0 0 10px rgba(106, 90, 205, 0.8);
+        }
+
+        /* Панель людей */
+        .people-panel {
+            margin-top: 30px;
+            background: rgba(44, 44, 84, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .people-panel h2 {
+            margin-bottom: 20px;
+            color: var(--light-text);
+            font-size: 1.8rem;
+        }
+
+        .people-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .person-card {
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .person-card.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(106, 90, 205, 0.5);
+            transform: translateY(-5px);
+        }
+
+        .person-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .person-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .person-info {
+            flex: 1;
+        }
+
+        .person-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .person-schedule {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Цели */
+        .goals-section {
+            margin-top: 30px;
+        }
+
+        .goals-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .goals-header h2 {
+            font-size: 1.8rem;
+            color: var(--light-text);
+        }
+
+        .day-type-selector {
+            display: flex;
+            gap: 10px;
+            background: rgba(30, 30, 60, 0.7);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .type-select-btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--light-text);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .type-select-btn.active {
+            background: var(--primary);
+        }
+
+        .goals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .goal-card {
+            background: rgba(44, 44, 84, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .goal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .goal-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .goal-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .goal-content {
+            line-height: 1.6;
+        }
+
+        .goal-tags {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .goal-tag {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Цвета для карточек целей */
+        .energy-goal .goal-icon {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+        }
+
+        .strength-goal .goal-icon {
+            background: rgba(255, 99, 71, 0.2);
+            color: #ff6347;
+        }
+
+        .focus-goal .goal-icon {
+            background: rgba(32, 178, 170, 0.2);
+            color: #20b2aa;
+        }
+
+        .sleep-goal .goal-icon {
+            background: rgba(106, 90, 205, 0.2);
+            color: #6a5acd;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                height: auto;
+                padding: 10px;
+            }
+
+            .nav-links {
+                margin-top: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .people-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Навигация -->
+<nav class="navbar">
+    <div class="logo">
+        <i class="fas fa-dragon logo-icon"></i>
+        <span>Энергетический Квест</span>
+    </div>
+    <div class="nav-links">
+        <a href="#" class="nav-link">Главная</a>
+        <a href="#" class="nav-link active">Календарь</a>
+        <a href="#" class="nav-link">Персонаж</a>
+        <a href="#" class="nav-link">Квесты</a>
+    </div>
+</nav>
+
+<div class="container">
+    <header class="page-header">
+        <h1>Календарь смен и целей</h1>
+        <p class="subtitle">
+            Планируйте свои смены, отмечайте дни отдыха и смотрите, когда вы работаете вместе.
+            На основе типа дня система автоматически подберет для вас оптимальные цели и квесты.
+        </p>
+    </header>
+
+    <!-- Основной контейнер календаря -->
+    <div class="calendar-container">
+        <!-- Панель управления календарем -->
+        <div class="calendar-controls">
+            <div class="calendar-title">
+                <h2>Июль 2023</h2>
+                <div class="month-nav">
+                    <button class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <div class="day-types">
+                <h3>Типы дней:</h3>
+                <div class="type-item" draggable="true">
+                    <div class="type-color" style="background: var(--day-shift);"></div>
+                    <span>Дневная смена</span>
+                </div>
+                <div class="type-item" draggable="true">
+                    <div class="type-color" style="background: var(--night-shift);"></div>
+                    <span>Ночная смена</span>
+                </div>
+                <div class="type-item" draggable="true">
+                    <div class="type-color" style="background: var(--rest-day);"></div>
+                    <span>Отдых после ночи</span>
+                </div>
+                <div class="type-item" draggable="true">
+                    <div class="type-color" style="background: var(--free-day);"></div>
+                    <span>Выходной</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: rgba(30, 30, 60, 0.7); border-radius: 10px;">
+                <h3>Статус:</h3>
+                <p>Перетащите тип дня на календарь, чтобы назначить смену</p>
+                <p style="margin-top: 10px; color: var(--primary);">
+                    <i class="fas fa-sync-alt"></i> Данные автоматически сохраняются
+                </p>
+            </div>
+        </div>
+
+        <!-- Сетка календаря -->
+        <div class="calendar-grid">
+            <div class="weekdays">
+                <div class="weekday">Пн</div>
+                <div class="weekday">Вт</div>
+                <div class="weekday">Ср</div>
+                <div class="weekday">Чт</div>
+                <div class="weekday">Пт</div>
+                <div class="weekday">Сб</div>
+                <div class="weekday">Вс</div>
+            </div>
+
+            <div class="days-grid">
+                <!-- Примеры дней с разными типами смен -->
+                <div class="day-cell free-day">
+                    <div class="day-header">
+                        <div class="day-number">26</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> Выходной
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> День
+                        </div>
+                    </div>
+                </div>
+
+                <div class="day-cell day-shift">
+                    <div class="day-header">
+                        <div class="day-number">27</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> День
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> Ночь
+                        </div>
+                    </div>
+                </div>
+
+                <div class="day-cell day-shift">
+                    <div class="day-header">
+                        <div class="day-number">28</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> День
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> Ночь
+                        </div>
+                    </div>
+                </div>
+
+                <div class="day-cell night-shift">
+                    <div class="day-header">
+                        <div class="day-number">29</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> Ночь
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> Ночь
+                        </div>
+                    </div>
+                    <div class="together">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                </div>
+
+                <div class="day-cell night-shift">
+                    <div class="day-header">
+                        <div class="day-number">30</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> Ночь
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> Ночь
+                        </div>
+                    </div>
+                    <div class="together">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                </div>
+
+                <div class="day-cell rest-day">
+                    <div class="day-header">
+                        <div class="day-number">1</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> Отдых
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> Отдых
+                        </div>
+                    </div>
+                </div>
+
+                <div class="day-cell free-day">
+                    <div class="day-header">
+                        <div class="day-number">2</div>
+                    </div>
+                    <div class="day-content">
+                        <div class="person-shift">
+                            <i class="fas fa-user shift-icon"></i> Выходной
+                        </div>
+                        <div class="person-shift">
+                            <i class="fas fa-heart shift-icon"></i> Выходной
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Еще несколько дней для демонстрации -->
+                <div class="day-cell free-day">
+                    <div class="day-header">
+                        <div class="day-number">3</div>
+                    </div>
+                </div>
+
+                <div class="day-cell day-shift">
+                    <div class="day-header">
+                        <div class="day-number">4</div>
+                    </div>
+                </div>
+
+                <div class="day-cell day-shift">
+                    <div class="day-header">
+                        <div class="day-number">5</div>
+                    </div>
+                </div>
+
+                <div class="day-cell night-shift">
+                    <div class="day-header">
+                        <div class="day-number">6</div>
+                    </div>
+                </div>
+
+                <div class="day-cell night-shift">
+                    <div class="day-header">
+                        <div class="day-number">7</div>
+                    </div>
+                </div>
+
+                <div class="day-cell rest-day">
+                    <div class="day-header">
+                        <div class="day-number">8</div>
+                    </div>
+                </div>
+
+                <div class="day-cell free-day today">
+                    <div class="day-header">
+                        <div class="day-number">9</div>
+                    </div>
+                </div>
+
+                <!-- Остальные дни месяца -->
+                <!-- Для простоты демонстрации пропущены -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Панель людей -->
+    <div class="people-panel">
+        <h2>Расписание вашей команды</h2>
+        <div class="people-list">
+            <div class="person-card active">
+                <div class="person-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="person-info">
+                    <div class="person-name">Алексей (Вы)</div>
+                    <div class="person-schedule">Следующая смена: завтра (дневная)</div>
+                </div>
+            </div>
+
+            <div class="person-card">
+                <div class="person-avatar" style="background: #ff6b6b;">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="person-info">
+                    <div class="person-name">Марина (Ваша девушка)</div>
+                    <div class="person-schedule">Сейчас: ночная смена</div>
+                </div>
+            </div>
+
+            <div class="person-card">
+                <div class="person-avatar" style="background: #1dd1a1;">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <div class="person-info">
+                    <div class="person-name">Игорь (Коллега)</div>
+                    <div class="person-schedule">Следующая смена: 12 июля (дневная)</div>
+                </div>
+            </div>
+
+            <div class="person-card">
+                <div class="person-avatar" style="background: #f368e0;">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <div class="person-info">
+                    <div class="person-name">Ольга (Коллега)</div>
+                    <div class="person-schedule">Сейчас: выходной</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Цели на основе типа дня -->
+    <div class="goals-section">
+        <div class="goals-header">
+            <h2>Рекомендуемые цели</h2>
+            <div class="day-type-selector">
+                <button class="type-select-btn active">Все</button>
+                <button class="type-select-btn">Дневная смена</button>
+                <button class="type-select-btn">Ночная смена</button>
+                <button class="type-select-btn">Отдых</button>
+            </div>
+        </div>
+
+        <div class="goals-grid">
+            <div class="goal-card energy-goal">
+                <div class="goal-header">
+                    <div class="goal-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="goal-title">Энергетический завтрак</div>
+                </div>
+                <div class="goal-content">
+                    <p>После ночной смены: Легкий белковый завтрак (творог + ягоды)</p>
+                    <p>Перед дневной сменой: Овсянка с орехами и фруктами</p>
+                    <div class="goal-tags">
+                        <span class="goal-tag">День</span>
+                        <span class="goal-tag">Ночь</span>
+                        <span class="goal-tag">Питание</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goal-card strength-goal">
+                <div class="goal-header">
+                    <div class="goal-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <div class="goal-title">Микродвижения</div>
+                </div>
+                <div class="goal-content">
+                    <p>В день смены: 5-минутная утренняя разминка</p>
+                    <p>В выходной: 20-минутная тренировка средней интенсивности</p>
+                    <div class="goal-tags">
+                        <span class="goal-tag">День</span>
+                        <span class="goal-tag">Отдых</span>
+                        <span class="goal-tag">Движение</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goal-card focus-goal">
+                <div class="goal-header">
+                    <div class="goal-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="goal-title">Восстановление фокуса</div>
+                </div>
+                <div class="goal-content">
+                    <p>После ночной смены: 10 минут дыхательных упражнений</p>
+                    <p>В день смены: 5-минутная медитация перед работой</p>
+                    <div class="goal-tags">
+                        <span class="goal-tag">Ночь</span>
+                        <span class="goal-tag">Отдых</span>
+                        <span class="goal-tag">Фокус</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goal-card sleep-goal">
+                <div class="goal-header">
+                    <div class="goal-icon">
+                        <i class="fas fa-bed"></i>
+                    </div>
+                    <div class="goal-title">Качественный сон</div>
+                </div>
+                <div class="goal-content">
+                    <p>После ночной смены: 7-8 часов непрерывного сна</p>
+                    <p>Перед дневной сменой: 15-минутный дневной сон</p>
+                    <div class="goal-tags">
+                        <span class="goal-tag">День</span>
+                        <span class="goal-tag">Ночь</span>
+                        <span class="goal-tag">Сон</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Инициализация календаря
+    document.addEventListener('DOMContentLoaded', function () {
+        // Переключение месяцев
+        const prevBtn = document.querySelector('.nav-btn:first-child');
+        const nextBtn = document.querySelector('.nav-btn:last-child');
+
+        prevBtn.addEventListener('click', function () {
+            alert('Переход к предыдущему месяцу');
+            // Здесь будет логика переключения месяцев
+        });
+
+        nextBtn.addEventListener('click', function () {
+            alert('Переход к следующему месяцу');
+            // Здесь будет логика переключения месяцев
+        });
+
+        // Переключение типа дня в фильтре целей
+        const typeBtns = document.querySelectorAll('.type-select-btn');
+        typeBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                typeBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                alert('Фильтрация целей по типу: ' + this.textContent);
+            });
+        });
+
+        // Выбор человека
+        const personCards = document.querySelectorAll('.person-card');
+        personCards.forEach(card => {
+            card.addEventListener('click', function () {
+                personCards.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                alert('Просмотр расписания: ' + this.querySelector('.person-name').textContent);
+            });
+        });
+
+        // Перетаскивание типов дней
+        const typeItems = document.querySelectorAll('.type-item');
+        typeItems.forEach(item => {
+            item.addEventListener('dragstart', function (e) {
+                e.dataTransfer.setData('text/plain', this.textContent.trim());
+            });
+        });
+
+        const dayCells = document.querySelectorAll('.day-cell');
+        dayCells.forEach(cell => {
+            cell.addEventListener('dragover', function (e) {
+                e.preventDefault();
+            });
+
+            cell.addEventListener('drop', function (e) {
+                e.preventDefault();
+                const dayType = e.dataTransfer.getData('text/plain');
+                alert('Назначен тип дня: ' + dayType + ' на ' + this.querySelector('.day-number').textContent + ' число');
+
+                // Изменяем внешний вид в зависимости от типа дня
+                this.className = 'day-cell';
+
+                if (dayType.includes('Дневная')) {
+                    this.classList.add('day-shift');
+                } else if (dayType.includes('Ночная')) {
+                    this.classList.add('night-shift');
+                } else if (dayType.includes('Отдых')) {
+                    this.classList.add('rest-day');
+                } else if (dayType.includes('Выходной')) {
+                    this.classList.add('free-day');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

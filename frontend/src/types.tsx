@@ -37,6 +37,8 @@ export interface UserStats extends BaseUser, Stats {
 // ============ Quest Types ============
 export interface BaseQuest {
     type: QuestCategory;
+    title: string;
+    description: string;
     stats_id: number;
 }
 

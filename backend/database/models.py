@@ -49,6 +49,8 @@ class Stats(Base):
 class Quests(Base):
     __tablename__ = "quests"
     id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
     type: Mapped[str] = mapped_column(String, nullable=False)
     stats_id: Mapped[int] = mapped_column(Integer, nullable=True)
 

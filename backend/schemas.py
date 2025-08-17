@@ -34,6 +34,8 @@ class UserStats(User, Stats):
 
 class Quest(BaseModel):
     stats_id: int
+    title: str
+    description: str
     type: str
 
 

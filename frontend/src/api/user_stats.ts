@@ -10,7 +10,7 @@ export const getUserWithStats = async (username: string = 'Acieran'): Promise<Us
 export const createUserWithStats = async (username: string, stats: Stats): Promise<ApiResponse> => {
     try {
         const response = await apiClient.post(`/${username}`, stats);
-        return {success: true, data: response.data};
+        return {success: true, message: response.data};
     } catch {
         return {success: false, message: 'Failed to create user'};
     }

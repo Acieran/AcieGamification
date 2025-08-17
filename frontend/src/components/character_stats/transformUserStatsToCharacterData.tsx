@@ -1,4 +1,4 @@
-import type {GetUserStatsResponse, StatType} from "../../types";
+import type {StatType, UserStats} from "../../types";
 
 function getRandomTwoDecimalPlaces(): number {
     const randomNumber = Math.random(); // Generates a number between 0 (inclusive) and 1 (exclusive)
@@ -7,13 +7,15 @@ function getRandomTwoDecimalPlaces(): number {
     return roundedNumber / 100; // Scales back to get two decimal places
 }
 
-export const transformUserStatsToCharacterData = (data?: GetUserStatsResponse) => {
-    const safeData = data && 'energy' in data ? data : {} as GetUserStatsResponse;
+export const transformUserStatsToCharacterData = (data: UserStats | null) => {
+    const safeData = data && 'energy' in data ? data : {} as UserStats;
     // Расчет прогресса уровня
     const xpForNextLevel = 1000;
 
     const energy = safeData.energy ?? getRandomTwoDecimalPlaces();
     const strength = safeData.strength ?? getRandomTwoDecimalPlaces();
+    const agility = safeData.agility ?? getRandomTwoDecimalPlaces();
+    const intelligence = safeData.intelligence ?? getRandomTwoDecimalPlaces();
     const focus = safeData.focus ?? getRandomTwoDecimalPlaces();
     const xp = safeData.xp ?? 0;
     const level = safeData.level ?? 0;
@@ -40,6 +42,20 @@ export const transformUserStatsToCharacterData = (data?: GetUserStatsResponse) =
                 icon: '💪',
                 value: `${strength}%`,
                 progress: strength
+            },
+            {
+                type: 'agility' as StatType,
+                name: '⚡️ Ловкость',
+                icon: '⚡️',
+                value: `${agility}%`,
+                progress: agility
+            },
+            {
+                type: 'intelligence' as StatType,
+                name: '🧠 Знания',
+                icon: '🧠',
+                value: `${intelligence}%`,
+                progress: intelligence
             },
             {
                 type: 'focus' as StatType,

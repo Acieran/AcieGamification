@@ -13,7 +13,9 @@ class UserCreateOrUpdate(User):
 
 class Stats(BaseModel):
     energy: float
-    power: float
+    strength: float
+    agility: float
+    intelligence: float
     level: int
     focus: float
     health: int

@@ -1,12 +1,14 @@
 // ============ Core Types ============
 export type QuestCategory = 'nutrition' | 'movement' | 'sleep' | 'water';
 export type ResourceType = 'health' | 'resource' | 'gold' | 'xp';
-export type StatType = 'energy' | 'strength' | 'focus' | 'level'; // Changed 'strength' to 'power'
+export type StatType = 'energy' | 'strength' | 'focus' | 'level' | 'agility' | 'intelligence'; // Changed 'strength' to 'power'
 
 // ============ User & Stats Types ============
 export interface Stats {
     energy: number;
-    strength: number;    // Renamed from 'strength'
+    strength: number;
+    agility: number;
+    intelligence: number;
     level: number;
     focus: number;
     health: number;
@@ -55,12 +57,15 @@ export interface UserQuestWithDetails extends UserQuest, Quest, Stats {
 // ============ API Request/Response Types ============
 export type ApiResponse = {
     success: boolean;
-    data?: unknown;
     message?: string;
 };
 
+export type ApiResponseGet = ApiResponse & {
+    data: UserStats | null;
+}
+
 // GET /{username}
-export type GetUserStatsResponse = UserStats & ApiResponse & ErrorResponse;
+export type GetUserStatsResponse = ApiResponseGet & ErrorResponse;
 
 // POST /{username}
 export type CreateUserRequest = Stats;

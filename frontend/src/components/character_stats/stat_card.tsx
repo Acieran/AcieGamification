@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
-import type {StatType} from "../../types.tsx";
+import React, { useState, useRef, useEffect } from 'react';
+import type { StatType } from "../../types.tsx";
 
 export type StatCardProps = {
     type: StatType;
@@ -8,26 +8,22 @@ export type StatCardProps = {
     value: string | number;
     progress: number;
     additionalInfo?: string;
-    onValueChange?: (newValue: string) => void; // Add callback for value changes
+    onValueChange?: (newValue: string) => void;
 };
 
 const StatCard: React.FC<StatCardProps> = (props) => {
-    // Defensive checks
-    if (!props) {
-        console.error('StatCard received undefined props — returning null to avoid crash');
-        return null;
-    }
-    console.log('StatCard props:', props);
+    const { type, name, icon, value, progress, additionalInfo, onValueChange } = props;
 
-    const {type, name, icon, value, progress, additionalInfo, onValueChange} = props;
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value.toString());
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Sync internal state with prop changes
+    // Sync with parent value when not editing
     useEffect(() => {
-        setEditValue(value.toString());
-    }, [value]);
+        if (!isEditing) {
+            setEditValue(value.toString());
+        }
+        }, [value, isEditing]);
 
     // Focus input when editing starts
     useEffect(() => {
@@ -37,10 +33,16 @@ const StatCard: React.FC<StatCardProps> = (props) => {
         }
     }, [isEditing]);
 
+    const updateValue = (new_value: string) => {
+        setEditValue(new_value);
+        console.log(new_value);
+    }
+
     const handleBlur = () => {
         setIsEditing(false);
-        if (editValue.trim() !== value.toString() && onValueChange) {
-            onValueChange(editValue.trim());
+        const newValue = editValue.trim();
+        if (newValue !== value.toString() && onValueChange) {
+            onValueChange(newValue);
         }
     };
 
@@ -56,16 +58,11 @@ const StatCard: React.FC<StatCardProps> = (props) => {
 
     const getProgressBarColor = () => {
         switch (type) {
-            case 'energy':
-                return 'var(--energy)';
-            case 'strength':
-                return 'var(--strength)';
-            case 'focus':
-                return 'var(--focus)';
-            case 'level':
-                return 'var(--gold)';
-            default:
-                return 'var(--primary)';
+            case 'energy': return 'var(--energy)';
+            case 'strength': return 'var(--strength)';
+            case 'focus': return 'var(--focus)';
+            case 'level': return 'var(--gold)';
+            default: return 'var(--primary)';
         }
     };
 
@@ -77,31 +74,27 @@ const StatCard: React.FC<StatCardProps> = (props) => {
             </div>
 
             <div className="stat-value-container">
-                {isEditing ? (
                     <input
                         ref={inputRef}
                         type="text"
                         className="stat-value-editing"
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
+                        onChange={(e) => updateValue(e.target.value)}
                         onBlur={handleBlur}
                         onKeyDown={handleKeyDown}
                         style={{
-                            width: '100%',
+                            minWidth: '5ch', // Prevents resizing jumps
                             textAlign: 'center',
                             padding: '2px 0',
-                            boxSizing: 'border-box'
+                            fontSize: '1.8rem',
+                            fontWeight: 'bold',
+                            background: '#f8f9fa',
+                            border: '2px solid #4285f4',
+                            borderRadius: '4px',
+                            outline: 'none',
+                            boxShadow: '0 0 0 2px rgba(66, 133, 244, 0.3)'
                         }}
                     />
-                ) : (
-                    <div
-                        className="stat-value"
-                        onClick={() => onValueChange && setIsEditing(true)}
-                        style={{cursor: onValueChange ? 'pointer' : 'default'}}
-                    >
-                        {value}
-                    </div>
-                )}
             </div>
 
             <div className="progress-bar">
@@ -119,6 +112,12 @@ const StatCard: React.FC<StatCardProps> = (props) => {
                     {additionalInfo}
                 </div>
             )}
+
+            <style>{`
+                .stat-value:hover {
+                    background-color: ${onValueChange ? '#f0f0f0' : 'transparent'};
+                }
+            `}</style>
         </div>
     );
 };

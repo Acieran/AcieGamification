@@ -1,9 +1,22 @@
-import React from 'react';
+import React, {useState} from 'react';
 import QuestTabs from './quest_tabs';
 import QuestItem from './quest_item';
 import type {QuestCategory} from "../../types.tsx";
 
+
+
 const QuestPanel: React.FC = () => {
+    const [currentTab, setCurrentTab] = useState<'daily' | 'weekly' | 'joint'>('daily');
+
+    // This will be called whenever the tab changes
+    const handleTabChange = (tab: 'daily' | 'weekly' | 'joint') => {
+        setCurrentTab(tab);
+        console.log('Current tab:', tab);
+        // You can add any additional logic here
+    };
+
+    const quests_api =
+
     const quests = [
         {
             category: 'nutrition',
@@ -53,10 +66,14 @@ const QuestPanel: React.FC = () => {
             ]
         }
     ];
+
     return (
         <div className="panel">
             <h2 className="panel-title"><i className="fas fa-tasks"></i> Квесты</h2>
-            <QuestTabs/>
+            <QuestTabs
+                activeTab={currentTab}
+                onTabChange={handleTabChange}
+            />
             <div className="quest-list">
                 {quests.map((quest, index) => (
                     <QuestItem

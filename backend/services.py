@@ -34,6 +34,15 @@ class Service:
             return user
         return None
 
+    def update_user(self, user: UserCreateOrUpdate) -> str | None:
+        db_id = self.db_repository.get_by_id(UserModel, user.id)
+        if db_id is not None:
+            if self.db_repository.update(UserModel, **user.model_dump()):
+                return user.username
+        return None
+
+
+
     def create_stats(self, stats: StatsSchema) -> int | None:
         stats = self.db_repository.create(StatsModel, **stats.model_dump())
         if stats:

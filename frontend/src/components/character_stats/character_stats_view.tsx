@@ -12,12 +12,12 @@ interface CharacterStatsViewProps {
     data: CharacterData;
 }
 
-const CharacterStatsView: React.FC<CharacterStatsViewProps> = (data) => {
+const CharacterStatsView: React.FC<CharacterStatsViewProps> = ({ data }) => {
     // Если данные отсутствуют (но это не должно случиться, так как мы обработали выше)
     if (!data) return null;
 
     console.log('CharacterStatsView data:', data);
-    console.log('data.stats:', data.data.stats);
+    console.log('data.stats:', data.stats);
 
     return (
         <div className="panel">
@@ -26,7 +26,7 @@ const CharacterStatsView: React.FC<CharacterStatsViewProps> = (data) => {
             </h2>
 
             <div className="character-stats">
-                {data.data.stats.map((stat, index) => (
+                {data.stats.map((stat, index) => (
                     <StatCard
                         key={index}
                         type={stat.type}
@@ -35,11 +35,12 @@ const CharacterStatsView: React.FC<CharacterStatsViewProps> = (data) => {
                         value={stat.value}
                         progress={stat.progress}
                         additionalInfo={stat.additionalInfo}
+                        onValueChange={(newValue) => newValue}
                     />
                 ))}
             </div>
 
-            <Resources resources={data.data.resources}/>
+            <Resources resources={data.resources}/>
 
             <h2 className="panel-title" style={{marginTop: '30px'}}>
                 <i className="fas fa-map"></i> Игровой Мир

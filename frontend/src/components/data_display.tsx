@@ -1,11 +1,12 @@
-import {QueryClientContext, useQuery} from '@tanstack/react-query';
+import { useQuery} from '@tanstack/react-query';
 import apiClient from '../api/client';
-import {Component, type JSX, useContext} from "react";
+import {Component, type JSX} from "react";
 
 // Define a base API response type
 interface BaseApiResponse {
     success: boolean;
     message?: string;
+    data?: unknown;
 }
 
 // Generic component props
@@ -34,10 +35,23 @@ function Data_display<T extends BaseApiResponse = BaseApiResponse>(
         render = (data) => <JsonDisplay data={data}/>
     }: DataDisplayProps<T> = {} as DataDisplayProps<T>
 ) {
-    console.log('QueryClientContext value:', useContext(QueryClientContext));
+
+
     const {data, isLoading, isError, error} = useQuery<T>({
         queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
-        queryFn: () => apiClient.get<T>(endpoint).then(res => res.data)
+        queryFn: () =>
+            apiClient.get<T>(endpoint)
+                .then(res => {
+                    return {
+                        success: true,
+                        data: res.data
+                    } as T;
+                })
+                .catch(() => {
+                    return {
+                        success: false
+                    } as T;
+                })
     });
 
     if (isLoading) return <div>Loading...</div>;

@@ -1,7 +1,8 @@
 // ============ Core Types ============
-export type QuestCategory = 'nutrition' | 'movement' | 'sleep' | 'water';
+export type QuestCategory = 'nutrition' | 'movement' | 'sleep' | 'water' | 'intellectual';
 export type ResourceType = 'health' | 'resource' | 'gold' | 'xp';
 export type StatType = 'energy' | 'strength' | 'focus' | 'level' | 'agility' | 'intelligence'; // Changed 'strength' to 'power'
+export type Page = 'dashboard' | 'calendar';
 
 // ============ User & Stats Types ============
 export interface Stats {
@@ -15,6 +16,27 @@ export interface Stats {
     resource: number;
     gold: number;
     xp: number;
+}
+
+export interface ScheduleEntry {
+    date: Date;
+    shifts: {
+        [employeeName: string]: 'Day' | 'Night' | 'Day Off' | '';
+    };
+}
+
+export interface ScheduleEntrySplitDate {
+    day: number;
+    month: number;
+    year: number;
+    user: string;
+    shift_type: 'Day' | 'Night' | 'Day Off' | '';
+}
+
+export interface CalendarNames {
+    year: number;
+    month: number;
+    user: string;
 }
 
 export interface ErrorResponse {
@@ -35,14 +57,19 @@ export interface UserStats extends BaseUser, Stats {
 }
 
 // ============ Quest Types ============
-export interface BaseQuest {
+export interface QuestBase {
     type: QuestCategory;
+    occurrence_type: 'daily' | 'monthly' | 'oneTime';
     title: string;
     description: string;
+
+}
+
+export interface Quest extends QuestBase {
     stats_id: number;
 }
 
-export interface Quest extends BaseQuest {
+export interface QuestUpdate extends Quest {
     id: number;
 }
 
@@ -53,17 +80,44 @@ export interface UserQuest {
     completed: boolean;
 }
 
-export interface UserQuestWithDetails extends UserQuest, Quest, Stats {
+export interface UserQuestWithDetails extends UserQuest, Quest {
+    reward: Stats;
+}
+
+export interface UserQuestStatsAPI extends QuestBase {
+    due_date: Date;
+    completed: boolean;
+    reward: Stats;
 }
 
 // ============ API Request/Response Types ============
-export type ApiResponse = {
+export type ApiResponseBase = {
     success: boolean;
     message?: string;
 };
 
-export type ApiResponseGet = ApiResponse & {
+export type ApiResponseGet = ApiResponseBase & {
     data: UserStats | null;
+}
+
+export type ApiResponse = {
+    config?: ApiResponseGet;
+    headers?: unknown;
+    request?: unknown;
+    status: number;
+    statusText?: string;
+}
+
+export type ApiResponseNew = {
+    data: string;
+}
+
+export type ApiResponseCalendar = ApiResponse & {
+    data: ScheduleEntry[];
+}
+
+export type CalendarNamesAPI = ApiResponse & {
+    data: CalendarNames[];
 }
 
 // GET /{username}
@@ -72,13 +126,9 @@ export type GetUserStatsResponse = ApiResponseGet & ErrorResponse;
 // POST /{username}
 export type CreateUserRequest = Stats;
 
-
-// GET /{username}/quests
-export type GetUserQuestsResponse = UserQuestWithDetails[];
-
 // POST /{username}/quests
 export type CreateUserQuestRequest = Omit<UserQuest, 'username' | 'quest_id'> &
-    Pick<BaseQuest, 'type'> &
+    Pick<QuestBase, 'type'> &
     Stats;
 
 

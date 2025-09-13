@@ -1,6 +1,12 @@
 import {useEffect, useState} from 'react';
+import type {Page} from "../types.tsx";
 
-const Header = () => {
+interface HeaderProps {
+    currentPage: Page;
+    onPageChange: (page: Page) => void;
+}
+
+const Header = ({currentPage, onPageChange}: HeaderProps) => {
     const [daysLeft, setDaysLeft] = useState(0);
 
     useEffect(() => {
@@ -13,6 +19,20 @@ const Header = () => {
         <header>
             <h1>Жизнь в Режиме Героя: Энергетический Квест</h1>
             <p className="subtitle">До цели осталось: {daysLeft} дней</p>
+            <nav className="navigation">
+                <button
+                    className={currentPage === 'dashboard' ? 'nav-btn active' : 'nav-btn'}
+                    onClick={() => onPageChange('dashboard')}
+                >
+                    Dashboard
+                </button>
+                <button
+                    className={currentPage === 'calendar' ? 'nav-btn active' : 'nav-btn'}
+                    onClick={() => onPageChange('calendar')}
+                >
+                    Calendar
+                </button>
+            </nav>
         </header>
     );
 };

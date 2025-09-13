@@ -53,6 +53,7 @@ class Quests(Base):
     description: Mapped[str] = mapped_column(String, nullable=True)
     type: Mapped[str] = mapped_column(String, nullable=False)
     stats_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    occurrence_type: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class Prerequisites(Base):
@@ -60,3 +61,21 @@ class Prerequisites(Base):
     quest_id: Mapped[int] = mapped_column(primary_key=True)
     prerequisite_id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
     done: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Calendar(Base):
+    __tablename__ = "calendar"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    month: Mapped[int] = mapped_column(Integer, nullable=False)
+    day: Mapped[int] = mapped_column(Integer, nullable=False)
+    user: Mapped[str] = mapped_column(String, nullable=False)
+    shift_type: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class CalendarNames(Base):
+    __tablename__ = "calendar_names"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    month: Mapped[int] = mapped_column(Integer, nullable=False)
+    user: Mapped[str] = mapped_column(String, nullable=False)

@@ -1,12 +1,18 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import QuestTabs from './quest_tabs';
 import QuestItem from './quest_item';
+import AddQuest from './add_quest.tsx'
 import type {QuestCategory} from "../../types.tsx";
-
+import {getUserQuests} from "../../api/user_quests.ts";
+import type {QuestClass} from "../../api/models.ts";
+import type {AxiosError} from "axios";
 
 
 const QuestPanel: React.FC = () => {
     const [currentTab, setCurrentTab] = useState<'daily' | 'weekly' | 'joint'>('daily');
+    const [data, setData] = useState<QuestClass[] | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<AxiosError | null>(null);
 
     // This will be called whenever the tab changes
     const handleTabChange = (tab: 'daily' | 'weekly' | 'joint') => {
@@ -15,57 +21,23 @@ const QuestPanel: React.FC = () => {
         // You can add any additional logic here
     };
 
-    const quests_api =
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null); // Reset previous errors
 
-    const quests = [
-        {
-            category: 'nutrition',
-            title: 'Меньшее Зло',
-            description: 'Выбрать более здоровую опцию в доставке (тонкое тесто, больше овощей, соус отдельно)',
-            rewards: [
-                {type: 'xp', value: '+10 XP'},
-                {type: 'energy', value: '+5 к Энергии'},
-            ]
-        },
-        {
-            category: 'nutrition',
-            title: 'Сборка Артефакта',
-            description: 'Приготовить/собрать ОДНО простое блюдо (яйца+овощи, салат из готовой грудки, творог+ягоды)',
-            rewards: [
-                {type: 'xp', value: '+25 XP'},
-                {type: 'energy', value: '+15 к Энергии'},
-                {type: 'gold', value: '+50 Золота'},
-            ]
-        },
-        {
-            category: 'water',
-            title: 'Сахарный Детокс',
-            description: 'Заказать кофе/бабл ти с 70% → 50% → 30% сахара. Или выпить 1 стакан воды перед ним.',
-            rewards: [
-                {type: 'xp', value: '+15 XP'},
-                {type: 'energy', value: '+10 к Энергии'},
-                {type: 'focus', value: '+5 к Фокусу'},
-            ]
-        },
-        {
-            category: 'movement',
-            title: 'Утренний Ритуал',
-            description: 'Выполнить 5-минутную разминку',
-            rewards: [
-                {type: 'xp', value: '+20 XP'},
-                {type: 'strength', value: '+10 к Силе'},
-            ]
-        },
-        {
-            category: 'sleep',
-            title: 'Восстановление HP',
-            description: 'После ночной смены выполнить ТОЛЬКО действия "красного" дня (сон, вода, легкая растяжка/дыхание)',
-            rewards: [
-                {type: 'xp', value: '+30 XP'},
-                {type: 'focus', value: '+20 к Фокусу'},
-            ]
+        try {
+            const response = await getUserQuests();
+            setData(response); // Update state with fetched data
+        } catch (err) {
+            setError(err as AxiosError); // Handle errors
+        } finally {
+            setLoading(false); // Reset loading state
         }
-    ];
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     return (
         <div className="panel">
@@ -75,16 +47,23 @@ const QuestPanel: React.FC = () => {
                 onTabChange={handleTabChange}
             />
             <div className="quest-list">
-                {quests.map((quest, index) => (
+                {loading && <p>Loading...</p>}
+                {error && <p>Error: {error.message}</p>}
+                {data && data.map((quest, index) => (
                     <QuestItem
                         key={index}
-                        category={quest.category as QuestCategory}
+                        id={quest.id}
+                        category={quest.type as QuestCategory}
                         title={quest.title}
                         description={quest.description}
-                        rewards={quest.rewards}
+                        rewards={quest.reward}
                     />
                 ))}
             </div>
+
+            <AddQuest
+                onQuestAdded={fetchData}
+            />
         </div>
     );
 };

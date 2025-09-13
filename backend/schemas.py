@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel
 
@@ -28,31 +29,110 @@ class StatsCreateOrUpdate(Stats):
     id: int
 
 
+class OccurrenceType(Enum):
+    DAILY = 'daily'
+    MONTHLY = 'monthly'
+    ONE_TIME = 'oneTime'
+
+
+class Type(Enum):
+    NUTRITION = 'nutrition'
+    MOVEMENT = 'movement'
+    SLEEP = 'sleep'
+    WATER = 'water'
+    INTELLECTUAL = 'intellectual'
+
+
+class ShiftType(Enum):
+    DAY = 'Day'
+    NIGHT = 'Night'
+    DAY_OFF = 'Day Off'
+    VACATION = 'Vacation'
+
+
 class UserStats(User, Stats):
     pass
 
 
-class Quest(BaseModel):
-    stats_id: int
+class QuestBase(BaseModel):
     title: str
     description: str
-    type: str
+    occurrence_type: OccurrenceType | str
+    type: Type | str
 
 
-class QuestCreate(Quest, Stats):
+class Quest(QuestBase):
+    stats_id: int
+
+
+class QuestStats(QuestBase, Stats):
     pass
 
 
-class QuestsUpdate(QuestCreate):
+class QuestUpdate(Quest):
     id: int
 
 
 class UserQuests(User):
-    due_date: datetime.datetime
+    due_date: datetime
     completed: bool
     quest_id: int
 
 
-class UserQuestsCreateOrUpdate(User, Quest, Stats):
-    due_date: datetime.datetime
+class UserQuestStats(QuestStats):
+    due_date: datetime
     completed: bool
+
+
+class UserQuestStatsAPI(QuestBase):
+    due_date: datetime
+    completed: bool
+    reward: Stats
+
+
+class CalendarAPI(BaseModel):
+    date: str
+    shifts: dict[str, str] | None
+
+
+class UserCalendarAPI(BaseModel):
+    day: int
+    month: int
+    year: int
+    user: str
+    shift_type: str
+
+
+class CalendarUsersAPI(BaseModel):
+    year: int
+    month: int
+    user: str
+
+
+class UserCalendarAPIAll(BaseModel):
+    year: int
+    month: int
+    user: str
+    shifts: list[str]
+
+
+asd = [
+    "Day",
+    "",
+    "Day",
+    "Day",
+    "Night",
+    "Day Off",
+    "Day Off",
+    "Day Off",
+    "Day",
+    "Day",
+    "Day Off",
+    "Day Off",
+    "Day",
+    "Day",
+    "Day",
+    "Night",
+    "Day Off",
+    "Day Off",
+]

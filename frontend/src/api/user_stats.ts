@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type {ApiResponse, Stats, UserStats} from '../types';
+import type {ApiResponseBase, Stats, UserStats} from '../types';
 
 export const getUserWithStats = async (username: string = 'Acieran'): Promise<UserStats[]> => {
     const response = await apiClient.get(`/${username}`);
@@ -7,7 +7,7 @@ export const getUserWithStats = async (username: string = 'Acieran'): Promise<Us
 };
 
 // POST (Create) new user
-export const createUserWithStats = async (username: string, stats: Stats): Promise<ApiResponse> => {
+export const createUserWithStats = async (username: string, stats: Stats): Promise<ApiResponseBase> => {
     try {
         const response = await apiClient.post(`/${username}`, stats);
         return {success: true, message: response.data};
@@ -17,9 +17,13 @@ export const createUserWithStats = async (username: string, stats: Stats): Promi
 };
 
 // PUT (Update) user
-export const updateUserStats = async (username: string, stats: Stats): Promise<ApiResponse> => {
+export const updateUserStats = async (username: string, stats: Stats, add_to_current_stats: boolean = true): Promise<ApiResponseBase> => {
     try {
-        await apiClient.put(`/${username}`, stats);
+        await apiClient.put(`/${username}`, stats, {
+            params: {
+                add_to_current_stats: add_to_current_stats
+            }
+        });
         return {success: true};
     } catch {
         return {success: false, message: 'Failed to update user'};
@@ -27,7 +31,7 @@ export const updateUserStats = async (username: string, stats: Stats): Promise<A
 };
 
 // DELETE user
-// export const deleteUser = async (id: number): Promise<ApiResponse> => {
+// export const deleteUser = async (id: number): Promise<ApiResponseBase> => {
 //     try {
 //         await apiClient.delete(`/users/${id}`);
 //         return { success: true };

@@ -393,6 +393,185 @@ h1 {
   width: 100%;
 }
 
+.add-quest-btn {
+    background-color: var(--success);
+    color: var(--darker-bg);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 3px 10px rgba(46, 213, 115, 0.3);
+}
+
+.add-quest-btn:hover {
+    background-color: #26c06d;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 213, 115, 0.5);
+}
+
+.quest-form-container {
+    background: rgba(44, 44, 84, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    border: 2px solid var(--secondary);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.quest-form-container h3 {
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary);
+    font-size: 1.3rem;
+    text-shadow: 0 0 5px rgba(255, 177, 66, 0.5);
+}
+
+.quest-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--light-text);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 12px;
+    background: rgba(30, 30, 60, 0.7);
+    border: 1px solid var(--secondary);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--light-text);
+    transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(106, 90, 205, 0.5);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.reward-fields {
+    border-top: 2px solid var(--primary);
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+.reward-fields h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: var(--gold);
+    text-shadow: 0 0 5px rgba(255, 177, 66, 0.3);
+}
+
+.reward-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--secondary);
+}
+
+.submit-btn {
+    background-color: var(--success);
+    color: var(--darker-bg);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 3px 10px rgba(46, 213, 115, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+    background-color: #26c06d;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 213, 115, 0.5);
+}
+
+.submit-btn:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.cancel-btn {
+    background-color: var(--danger);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 3px 10px rgba(255, 71, 87, 0.3);
+}
+
+.cancel-btn:hover:not(:disabled) {
+    background-color: #ff3747;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.5);
+}
+
+.cancel-btn:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .reward-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .submit-btn,
+    .cancel-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* Адаптивность */
 @media (max-width: 900px) {
   .game-grid {
@@ -421,4 +600,104 @@ h1 {
     width: 100%;
     justify-content: center;
   }
+
+    .add-quest-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .add-quest-btn:hover {
+        background-color: #45a049;
+    }
+
+    .quest-form-container {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 15px;
+    }
+
+    .quest-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .form-group textarea {
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    .reward-fields {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+
+    .reward-fields h4 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 15px;
+    }
+
+    .submit-btn {
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .cancel-btn {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .cancel-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
 }

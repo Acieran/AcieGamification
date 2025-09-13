@@ -154,7 +154,7 @@ class BaseRepository:
             self,
             model: type[Base],
             offset: int = 0,
-            limit: int = 10,
+            limit: int = None,
             **kwargs: Any
     ) -> list[dict[str, Any]]:
         """

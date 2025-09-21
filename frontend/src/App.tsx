@@ -24,7 +24,7 @@ const App = () => {
             case 'dashboard':
                 return dashboard()
             case 'calendar':
-                return <Calendar employees={["Me", "Him"]}/>;
+                return <Calendar/>;
             default:
                 return dashboard()
         }

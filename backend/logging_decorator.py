@@ -3,15 +3,16 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from functools import wraps
+from pathlib import Path
 from uuid import UUID
 
 # --- Configuration ---
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
-    filename='bot.log',
-    filemode='w',
-    encoding='utf-8'
+    filename=Path(__file__).parent / "logs" / "bot.log",
+    filemode="w",
+    encoding="utf-8",
 )
 logger = logging.getLogger(__name__)
 
@@ -31,11 +32,11 @@ def log(func):
         # Prepare argument representations
         arg_reprs = []
         for name, value in bound.arguments.items():
-            arg_reprs.append(
-                f"{name} = {safe_repr(value, 3, 100)}"
-            )
+            arg_reprs.append(f"{name} = {safe_repr(value, 3, 100)}")
         # Входные данные
-        logger.info(f"{symbol * call_count}Call: {func.__name__} with args={arg_reprs} kwargs={str(kwargs)}")
+        logger.info(
+            f"{symbol * call_count}Call: {func.__name__} with args={arg_reprs} kwargs={kwargs!s}"
+        )
         call_count += 1
         result = func(*args, **kwargs)
         # Выходные данные
@@ -105,21 +106,19 @@ def safe_repr(obj, max_depth: int, max_length: int, _current_depth: int = 0) -> 
         return f"{{{', '.join(items)}{suffix}}}"
 
     # Handle custom objects
-    if hasattr(obj, '__dict__'):
+    if hasattr(obj, "__dict__"):
         try:
             # Get public attributes
             attrs = {}
             for k, v in vars(obj).items():
-                if not k.startswith('_'):
+                if not k.startswith("_"):
                     attrs[k] = v
 
             # Format as class representation
             class_name = obj.__class__.__name__
             attr_reprs = []
             for k, v in list(attrs.items())[:max_length]:
-                attr_reprs.append(
-                    f"{k}={safe_repr(v, max_depth, max_length, _current_depth + 1)}"
-                )
+                attr_reprs.append(f"{k}={safe_repr(v, max_depth, max_length, _current_depth + 1)}")
             suffix = ", ..." if len(attrs) > max_length else ""
             return f"{class_name}({', '.join(attr_reprs)}{suffix})"
         except Exception:

@@ -30,24 +30,24 @@ class StatsCreateOrUpdate(Stats):
 
 
 class OccurrenceType(Enum):
-    DAILY = 'daily'
-    MONTHLY = 'monthly'
-    ONE_TIME = 'oneTime'
+    DAILY = "daily"
+    MONTHLY = "monthly"
+    ONE_TIME = "oneTime"
 
 
 class Type(Enum):
-    NUTRITION = 'nutrition'
-    MOVEMENT = 'movement'
-    SLEEP = 'sleep'
-    WATER = 'water'
-    INTELLECTUAL = 'intellectual'
+    NUTRITION = "nutrition"
+    MOVEMENT = "movement"
+    SLEEP = "sleep"
+    WATER = "water"
+    INTELLECTUAL = "intellectual"
 
 
 class ShiftType(Enum):
-    DAY = 'Day'
-    NIGHT = 'Night'
-    DAY_OFF = 'Day Off'
-    VACATION = 'Vacation'
+    DAY = "Day"
+    NIGHT = "Night"
+    DAY_OFF = "Day Off"
+    VACATION = "Vacation"
 
 
 class UserStats(User, Stats):

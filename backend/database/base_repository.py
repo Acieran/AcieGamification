@@ -1,17 +1,17 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast, get_type_hints
 
-from sqlalchemy import exc, select, inspect
+from sqlalchemy import exc, inspect, select
 from sqlalchemy import inspect as sqlalchemy_inspect
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, Mapper
+from sqlalchemy.orm import Mapper, Session
 
-from backend.database.models import Base
-from backend.database.sql_database_manager import SQLDatabaseManager
-from backend.logging_decorator import log
+from ..logging_decorator import log
+from .models import Base
+from .sql_database_manager import SQLDatabaseManager
 
-T = TypeVar('T', bound=Base)
-F = TypeVar('F', bound=Callable[..., Any])
+T = TypeVar("T", bound=Base)
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class BaseRepository:
@@ -25,7 +25,7 @@ class BaseRepository:
         self._session: Session | None = None
 
     @log
-    def transaction(self) -> '_TransactionHelper':
+    def transaction(self) -> "_TransactionHelper":
         """Use this when you need multi-operation transactions"""
         return self._TransactionHelper(self)
 
@@ -49,7 +49,7 @@ class BaseRepository:
         """
 
         @wraps(func)
-        def wrapper(self: 'BaseRepository', model: type[Base], *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: "BaseRepository", model: type[Base], *args: Any, **kwargs: Any) -> Any:
             if self.get_session() is None:
                 with self.transaction():
                     session = self.get_session()
@@ -61,19 +61,21 @@ class BaseRepository:
         return cast(F, wrapper)
 
     class _TransactionHelper:
-        def __init__(self, repository: 'BaseRepository') -> None:
+        def __init__(self, repository: "BaseRepository") -> None:
             self.repository = repository
 
-        def __enter__(self) -> 'BaseRepository':
+        def __enter__(self) -> "BaseRepository":
             # Start a new session if none exists
             if self.repository._session is None:
                 self.repository._session = self.repository.db_manager.get_session()
             return self.repository
 
-        def __exit__(self,
-                     exc_type: type[BaseException] | None,
-                     exc_val: BaseException | None,
-                     exc_tb: Any | None) -> None:
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: Any | None,
+        ) -> None:
             session = self.repository._ensure_session()
 
             if exc_type is None:
@@ -109,10 +111,9 @@ class BaseRepository:
 
     @transaction_decorator
     @log
-    def get_by_custom_field(self,
-                            model: type[T],
-                            field_name: str,
-                            field_value: Any) -> dict[str, Any] | None:
+    def get_by_custom_field(
+        self, model: type[T], field_name: str, field_value: Any
+    ) -> dict[str, Any] | None:
         """
         Retrieves a record from the database based on a custom field name and value.
 
@@ -138,9 +139,12 @@ class BaseRepository:
             raise ValueError(f"Invalid field_name:{field_name}. Valid fields are:{attribute_names}")
 
         try:
-            result = (self._ensure_session().query(model).
-                      where(inspector.columns[field_name] == field_value).
-                      first())
+            result = (
+                self._ensure_session()
+                .query(model)
+                .where(inspector.columns[field_name] == field_value)
+                .first()
+            )
             if result and isinstance(result, Base):
                 return result.to_dict()
             return None
@@ -151,11 +155,11 @@ class BaseRepository:
     @transaction_decorator
     @log
     def get_by_custom_fields(
-            self,
-            model: type[Base],
-            offset: int = 0,
-            limit: int = None,
-            **kwargs: Any
+        self,
+        model: type[Base],
+        offset: int = 0,
+        limit: int | None = None,
+        **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """
         Retrieves records from the database based on multiple custom fields
@@ -178,7 +182,7 @@ class BaseRepository:
             for field, value in kwargs.items():
                 column = getattr(model, field, None)  # Get the column object from the model
                 if column is None:
-                    raise SQLAlchemyError(f"Model '{str(model)}' has no attribute '{field}'")
+                    raise SQLAlchemyError(f"Model '{model!s}' has no attribute '{field}'")
                 query = query.where(inspector.columns[field] == value)
 
             # Apply offset and limit

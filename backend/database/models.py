@@ -2,7 +2,7 @@ import random
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, Float, String, inspect, Integer, DateTime
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, inspect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 

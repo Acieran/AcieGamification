@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./backend
+    image: acie_gamification_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    working_dir: /backend
+    volumes:
+      - ./backend/data:/backend/data
+      - ./backend:/backend
+    environment:
+      - DATABASE_PATH=./data/gamification.db
+
+  frontend:
+    build: ./frontend
+    image: acie_gamification_frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/frontend  # Sync your current directory with container
+      - /frontend/node_modules  # Keep node_modules in container
+    ports:
+      - "8080:8080"
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # Needed for file watching in Docker

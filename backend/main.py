@@ -1,4 +1,5 @@
 import json
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 from http import HTTPStatus
@@ -10,21 +11,30 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-from backend.database.base_repository import BaseRepository
-from backend.database.sql_database_manager import SQLDatabaseManager
-from backend.middle_service import create_user_quest_quest_stats
-from backend.schemas import UserCreateOrUpdate, Stats, Quest, UserQuests, UserQuestStats, UserQuestStatsAPI, \
-    UserCalendarAPI, ShiftType, UserCalendarAPIAll, CalendarUsersAPI
-from backend.services import Service
-from backend.sheduler.sheduler import Scheduler
+from .database.base_repository import BaseRepository
+from .database.sql_database_manager import SQLDatabaseManager
+from .middle_service import create_user_quest_quest_stats
+from .schemas import (
+    CalendarUsersAPI,
+    Quest,
+    ShiftType,
+    Stats,
+    UserCalendarAPI,
+    UserCalendarAPIAll,
+    UserCreateOrUpdate,
+    UserQuests,
+    UserQuestStats,
+    UserQuestStatsAPI,
+)
+from .services import Service
+from .sheduler.sheduler import Scheduler
 
 current_dir = Path(__file__).parent
-db_path = (
-        current_dir
-        / "gamification.db"
-).resolve()
+db_path = os.getenv("DATABASE_PATH", r".\data/gamification.db")
 
-db_repository = BaseRepository(SQLDatabaseManager(f"sqlite:///{db_path}"))
+db_repository = BaseRepository(
+    SQLDatabaseManager(f"sqlite:///{current_dir / 'data' / 'gamification.db'}")
+)
 service = Service(db_repository=db_repository)
 scheduler = Scheduler(service=service)
 
@@ -49,8 +59,8 @@ app = FastAPI(lifespan=lifespan)
 origins = [
     "http://localhost",
     "http://localhost:8080",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -90,11 +100,23 @@ async def create_or_update_calendar_names(calendar_names: CalendarUsersAPI):
     return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content="There was an error")
 
 
+@app.delete("/calendar/names")
+async def delete_calendar_names(year: int, month: int, user: str):
+    if service.delete_calendar_name(year, month, user):
+        return JSONResponse(status_code=201, content="success")
+    return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content="There was an error")
+
+
 @app.post("/calendar")
 async def create_or_update_calendar(data: UserCalendarAPI):
     try:
         if service.create_or_update_calendar(
-                day=data.day, month=data.month, year=data.year, user=data.user, shift_type=ShiftType(data.shift_type)):
+            day=data.day,
+            month=data.month,
+            year=data.year,
+            user=data.user,
+            shift_type=ShiftType(data.shift_type),
+        ):
             return JSONResponse(status_code=200, content="success")
         raise Exception()
     except ValueError:
@@ -116,7 +138,11 @@ async def get_calendar_all_from_file(file: UploadFile):
             service.create_calendar(data=UserCalendarAPIAll(**entry), start_date=1)
         return JSONResponse(status_code=200, content="success")
     except Exception:
-        return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content="Error creating calendar")
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content="Error creating calendar",
+        )
+
 
 @app.get("/{username}")
 async def get_user_with_stats(username: str):
@@ -125,6 +151,7 @@ async def get_user_with_stats(username: str):
         return JSONResponse(data.model_dump(), status_code=200)
     return JSONResponse(status_code=404, content="User not found")
 
+
 @app.post("/{username}")
 async def create_user_with_stats(username: str, user_stats: Stats):
     user = service.get_user(username)
@@ -132,13 +159,16 @@ async def create_user_with_stats(username: str, user_stats: Stats):
         stats_id = service.create_stats(user_stats)
         user = service.create_user(UserCreateOrUpdate(username=username, stats_id=stats_id))
     else:
-        stats = service.get_stats(user.stats_id)
+        service.get_stats(user.stats_id)
     if user:
         return JSONResponse(status_code=200, content="success")
     return JSONResponse(status_code=404, content="User not found")
 
+
 @app.put("/{username}")
-async def update_user_stats(username: str, user_stats: Stats, add_to_current_stats: bool = None):
+async def update_user_stats(
+    username: str, user_stats: Stats, add_to_current_stats: bool | None = None
+):
     user = service.get_user(username)
     if user:
         if add_to_current_stats is not None:
@@ -152,7 +182,7 @@ async def update_user_stats(username: str, user_stats: Stats, add_to_current_sta
                         setattr(user_stats, key, value)
                 else:
                     user_stats.__setattr__(key, value + user_stats.__getattr__(key))
-        stats_id = service.update_stats(stats_id=user.stats_id, stats = user_stats)
+        stats_id = service.update_stats(stats_id=user.stats_id, stats=user_stats)
         if stats_id:
             return JSONResponse(status_code=200, content="success")
         return JSONResponse(status_code=500, content="Error updating user stats")
@@ -163,7 +193,6 @@ async def update_user_stats(username: str, user_stats: Stats, add_to_current_sta
 async def get_user_quests(username: str, include_completed: bool = False):
     user = service.get_user(username)
     if user:
-
         user_quests = service.get_user_quests(username)
         result = []
         for i, user_quest in enumerate(user_quests):
@@ -196,12 +225,20 @@ async def create_user_quest(username: str, data: UserQuestStatsAPI):
 
 
 @app.put("/{username}/quests/{quest_id}")
-async def update_user_quest(username: str, quest_id: int, data: UserQuestStats | None, complete: bool = False):
+async def update_user_quest(
+    username: str, quest_id: int, data: UserQuestStats | None, complete: bool = False
+):
     user = service.get_user(username)
     if user:
         if complete:
             user_quest_id = service.update_user_quest(
-                user_quest=UserQuests(username=username, due_date=data.due_date, completed=True, quest_id=quest_id))
+                user_quest=UserQuests(
+                    username=username,
+                    due_date=data.due_date,
+                    completed=True,
+                    quest_id=quest_id,
+                )
+            )
             return JSONResponse(user_quest_id, status_code=200)
         else:
             data_dict = data.model_dump()
@@ -216,6 +253,7 @@ async def update_user_quest(username: str, quest_id: int, data: UserQuestStats |
 
 
 # @app.post("/{username}/quests/{quest_id}")
+
 
 @app.delete("/{username}/quests/{quest_id}")
 async def delete_user_quest(username: str, quest_id: int):

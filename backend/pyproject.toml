@@ -1,0 +1,29 @@
+[tool.ruff]
+# Set the maximum line length
+line-length = 100
+
+# Exclude directories
+exclude = [
+    ".git",
+    "__pycache__",
+    "migrations",
+    "frontend",
+    "node_modules"
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (E) and Pyflakes (F) rules
+select = ["E", "F", "W", "I", "C", "B", "UP", "RUF", "I001"]
+
+# Ignore the following rules
+ignore = ["PLW0603", "C901", "PLR0911", "PLR0912"]
+# Enable additional rules
+extend-select = [
+    "PL", # Pylint
+    "PT", # Pytest
+    "DJ", # Django
+]
+
+[tool.ruff.format]
+# Formatting options
+quote-style = "double"

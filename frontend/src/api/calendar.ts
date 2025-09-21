@@ -48,3 +48,31 @@ export const setCalendar = async (
     const response: ApiResponse = await apiClient.post(`/calendar`, data)
     return response && response.status === 200;
 }
+
+export const setCalendarNames = async (
+    year: number = new Date().getFullYear(),
+    month: number = new Date().getMonth() + 1,
+    user: string
+): Promise<boolean> => {
+    const response: ApiResponse = await apiClient.post(`/calendar/names`, {
+        year: year,
+        month: month,
+        user: user
+    })
+    return response && response.status === 200;
+}
+
+export const deleteCalendarName = async (
+    year: number = new Date().getFullYear(),
+    month: number = new Date().getMonth() + 1,
+    user: string
+): Promise<boolean> => {
+    const response: ApiResponse = await apiClient.delete(`/calendar/names`, {
+        params: {
+            year: year,
+            month: month,
+            user: user
+        }
+    })
+    return response && response.status === 201;
+}

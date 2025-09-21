@@ -1,8 +1,8 @@
-from backend.logging_decorator import log
-from backend.middle_service import create_user_quest_quest_stats
-from backend.schemas import UserQuestStatsAPI, Stats, OccurrenceType, Type
-from backend.services import Service
-from backend.utils.get_due_date import get_midnight_in_days
+from ...logging_decorator import log
+from ...middle_service import create_user_quest_quest_stats
+from ...schemas import OccurrenceType, Stats, Type, UserQuestStatsAPI
+from ...services import Service
+from ...utils.get_due_date import get_midnight_in_days
 
 quests = [
     UserQuestStatsAPI(
@@ -23,7 +23,7 @@ quests = [
             resource=0,
             gold=1,
             xp=10,
-        )
+        ),
     ),
 ]
 
@@ -41,7 +41,9 @@ def create_daily_quests(service: Service, username: str = "Acieran"):
         result[quest.title] = "in_progress"
         try:
             if ok:
-                user_quest_id = create_user_quest_quest_stats(service=service, username=username, data=quest)
+                user_quest_id = create_user_quest_quest_stats(
+                    service=service, username=username, data=quest
+                )
                 if user_quest_id:
                     result[quest.title] = "success"
                 else:

@@ -2,17 +2,21 @@ import React, {useEffect, useState} from 'react';
 import '../Styles/WorkScheduleCalendar.css';
 import {AxiosError} from "axios";
 import type {ScheduleEntry} from "../types.tsx";
-import {getCalendar, getCalendarNames, setCalendar} from "../api/calendar.ts";
+import {deleteCalendarName, getCalendar, getCalendarNames, setCalendar, setCalendarNames} from "../api/calendar.ts";
 import {ScheduleEntrySplitDateClass} from "../api/models.ts";
 
 const Calendar: React.FC = () => {
     const [employees, setEmployees] = useState(['Me', 'Him']);
     const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+    const [currentYear, setCurrentYear] = useState<number>((new Date()).getFullYear());
+
     const [schedule, setSchedule] = useState<ScheduleEntry[]>(generateSampleData(employees));
     const [hoveredEmployee, setHoveredEmployee] = useState<string | null>(null);
     const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<AxiosError | null>(null);
+    const [IsCreate, setIsCreate] = useState<boolean>(false);
+    const [createUser_User, setCreateUser_User] = useState<string>('');
 
     const fetchData = async () => {
         setLoading(true);
@@ -58,13 +62,46 @@ const Calendar: React.FC = () => {
             setError(new AxiosError("Error updating calendar"));
     };
 
+    const handleCreateUserChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCreateUser_User(event.target.value);
+    };
+
+    const sendNewUser = async () => {
+        const response = setCalendarNames(currentYear, currentMonth.getMonth(), createUser_User)
+        if (await response) {
+            employees.push(createUser_User)
+            setEmployees(employees);
+            setCreateUser_User('')
+            setIsCreate(false)
+        } else
+            setError(new AxiosError("Error creating new calendar user"));
+    }
+
+    const deleteUser = async (user: string) => {
+        const response = deleteCalendarName(currentYear, currentMonth.getMonth(), user);
+        if (await response) {
+            const indexToRemove: number = employees.indexOf(user);
+
+            if (indexToRemove !== -1) { // Check if the element exists
+                employees.splice(indexToRemove, 1); // Removes 1 element at the found index
+            }
+            setEmployees(employees);
+        } else {
+            setError(new AxiosError("Error deleting calendar user"));
+        }
+    }
+
     // Navigation functions
     const goToPreviousMonth = () => {
         setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+        if (currentMonth.getMonth() == 0)
+            setCurrentYear(currentYear - 1);
     };
 
     const goToNextMonth = () => {
         setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+        if (currentMonth.getMonth() == 11)
+            setCurrentYear(currentYear + 1);
     };
 
     // Get days in month
@@ -137,6 +174,9 @@ const Calendar: React.FC = () => {
                             >
                                 <td className={`employee-name ${hoveredEmployee === employee ? 'highlighted-row' : ''}`}>
                                     {employee}
+                                    <button onClick={() => deleteUser(employee)} className="user-button delete-button">
+                                        -
+                                    </button>
                                 </td>
                                 {calendarDays.map(day => {
                                     // Skip weekends if you want only work days
@@ -179,6 +219,18 @@ const Calendar: React.FC = () => {
                                 })}
                             </tr>
                         ))}
+                        <tr className="user-management">
+                            {IsCreate ? (
+                                <td>
+                                    <input type="text" onChange={handleCreateUserChange} className="user-input"/>
+                                    <button onClick={sendNewUser} className="nav-button">Отправить</button>
+                                </td>
+                            ) : (
+                                <button onClick={() => setIsCreate(true)} className="user-button add-button">
+                                    +
+                                </button>
+                            )}
+                        </tr>
                         </tbody>
                     </table>
                 }

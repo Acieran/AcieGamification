@@ -1,10 +1,12 @@
 from backend.logging_decorator import log
-from backend.schemas import UserQuests, Quest, Stats, UserQuestStatsAPI
+from backend.schemas import Quest, Stats, UserQuests, UserQuestStatsAPI
 from backend.services import Service
 
 
 @log
-def create_user_quest_quest_stats(service: Service, username: str, data: UserQuestStatsAPI) -> int | None:
+def create_user_quest_quest_stats(
+    service: Service, username: str, data: UserQuestStatsAPI
+) -> int | None:
     data_dict = data.model_dump()
     data_dict["username"] = username
     stats_id = service.create_stats(Stats(**data_dict["reward"]))
@@ -14,7 +16,7 @@ def create_user_quest_quest_stats(service: Service, username: str, data: UserQue
             type=data.type,
             title=data.title,
             description=data.description,
-            occurrence_type=data.occurrence_type
+            occurrence_type=data.occurrence_type,
         )
     )
     return service.create_user_quest(user_quest=UserQuests(**data_dict))

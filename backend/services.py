@@ -3,19 +3,26 @@ import json
 from datetime import datetime
 
 from fastapi import UploadFile
+from sqlalchemy.exc import SQLAlchemyError
 
 from backend.database.base_repository import BaseRepository
-from backend.database.models import (User as UserModel,
-                                     Stats as StatsModel,
-                                     Quests as QuestsModel, UserQuests as UserQuestsModel, Calendar, CalendarNames)
+from backend.database.models import Calendar, CalendarNames
+from backend.database.models import Quests as QuestsModel
+from backend.database.models import Stats as StatsModel
+from backend.database.models import User as UserModel
+from backend.database.models import UserQuests as UserQuestsModel
 from backend.logging_decorator import log
-from backend.schemas import (UserCreateOrUpdate,
-                             UserStats,
-                             Stats as StatsSchema,
-                             QuestUpdate as QuestCreateSchema,
-                             Quest as QuestSchema,
-                             UserQuests as UserQuestsSchema,
-                             CalendarAPI, ShiftType, UserCalendarAPIAll)
+from backend.schemas import (
+    CalendarAPI,
+    ShiftType,
+    UserCalendarAPIAll,
+    UserCreateOrUpdate,
+    UserStats,
+)
+from backend.schemas import Quest as QuestSchema
+from backend.schemas import QuestUpdate as QuestCreateSchema
+from backend.schemas import Stats as StatsSchema
+from backend.schemas import UserQuests as UserQuestsSchema
 
 
 class Service:
@@ -86,7 +93,9 @@ class Service:
 
     @log
     def update_quest(self, quest_id: int, quest: QuestSchema) -> int | None:
-        return self.db_repository.update(QuestsModel, item_id=quest_id, stats_id=quest.stats_id, type=quest.type)
+        return self.db_repository.update(
+            QuestsModel, item_id=quest_id, stats_id=quest.stats_id, type=quest.type
+        )
 
     @log
     def delete_quest(self, quest_id: int) -> bool:
@@ -95,7 +104,9 @@ class Service:
 
     @log
     def get_user_quests(self, username: str, **kwargs) -> list[UserQuestsSchema]:
-        user_quests_dict = self.db_repository.get_by_custom_fields(UserQuestsModel, username=username, **kwargs)
+        user_quests_dict = self.db_repository.get_by_custom_fields(
+            UserQuestsModel, username=username, **kwargs
+        )
         result = []
         for user_quest in user_quests_dict:
             result.append(UserQuestsSchema(**user_quest))
@@ -137,23 +148,25 @@ class Service:
         num_days = calendar.monthrange(year, month)[1]
         result = []
         for day in range(1, num_days + 1):
-            db_data = self.db_repository.get_by_custom_fields(Calendar, year=year, month=month, day=day)
+            db_data = self.db_repository.get_by_custom_fields(
+                Calendar, year=year, month=month, day=day
+            )
             shifts = {}
             if db_data is not None:
                 for item in db_data:
                     shifts[item["user"]] = item["shift_type"]
                 if len(shifts) != 0:
-                    temp = CalendarAPI(
-                        date=datetime(year, month, day).isoformat(),
-                        shifts=shifts
-                    )
+                    temp = CalendarAPI(date=datetime(year, month, day).isoformat(), shifts=shifts)
                     result.append(temp.model_dump())
         return result
 
     @log
-    def create_or_update_calendar(self, year: int, month: int, day: int, user: str,
-                                  shift_type: ShiftType) -> int | None:
-        db_record = self.db_repository.get_by_custom_fields(Calendar, year=year, month=month, day=day, user=user)
+    def create_or_update_calendar(
+        self, year: int, month: int, day: int, user: str, shift_type: ShiftType
+    ) -> int | None:
+        db_record = self.db_repository.get_by_custom_fields(
+            Calendar, year=year, month=month, day=day, user=user
+        )
         if len(db_record) > 0:
             result = self.db_repository.update(
                 model=Calendar,
@@ -162,7 +175,7 @@ class Service:
                 month=month,
                 day=day,
                 user=user,
-                shift_type=shift_type.value
+                shift_type=shift_type.value,
             )
         else:
             result = self.db_repository.create(
@@ -171,17 +184,30 @@ class Service:
                 month=month,
                 day=day,
                 user=user,
-                shift_type=shift_type.value
+                shift_type=shift_type.value,
             )
-        if self.db_repository.get_by_custom_fields(CalendarNames, year=year, month=month, user=user) is None:
+        if (
+            self.db_repository.get_by_custom_fields(
+                CalendarNames, year=year, month=month, user=user
+            )
+            is None
+        ):
             self.db_repository.create(CalendarNames, year=year, month=month, user=user)
         return result
 
     @log
     def create_calendar(self, data: UserCalendarAPIAll, start_date: int):
-        if len(self.db_repository.get_by_custom_fields(CalendarNames, year=data.year, month=data.month,
-                                                       user=data.user)) == 0:
-            self.db_repository.create(CalendarNames, year=data.year, month=data.month, user=data.user)
+        if (
+            len(
+                self.db_repository.get_by_custom_fields(
+                    CalendarNames, year=data.year, month=data.month, user=data.user
+                )
+            )
+            == 0
+        ):
+            self.db_repository.create(
+                CalendarNames, year=data.year, month=data.month, user=data.user
+            )
         try:
             for key, shift in enumerate(data.shifts, start=start_date):
                 try:
@@ -192,12 +218,12 @@ class Service:
                         month=data.month,
                         day=key,
                         user=data.user,
-                        shift_type=shift
+                        shift_type=shift,
                     )
                 except ValueError:
                     continue
             return True
-        except:
+        except SQLAlchemyError:
             return False
 
     @log
@@ -206,7 +232,9 @@ class Service:
 
     @log
     def create_calendar_name(self, year, month, user):
-        if self.db_repository.get_by_custom_fields(CalendarNames, year=year, month=month, user=user):
+        if self.db_repository.get_by_custom_fields(
+            CalendarNames, year=year, month=month, user=user
+        ):
             return True
         return self.db_repository.create(CalendarNames, year=year, month=month, user=user)
 
@@ -220,3 +248,11 @@ class Service:
         except json.JSONDecodeError:
             print(f"Error: File '{file.file}' contains invalid JSON.")
             return []
+
+    def delete_calendar_name(self, year, month, user):
+        items = self.db_repository.get_by_custom_fields(
+            CalendarNames, year=year, month=month, user=user
+        )
+        if len(items) > 0:
+            return self.db_repository.delete(CalendarNames, items[0]["id"])
+        return True

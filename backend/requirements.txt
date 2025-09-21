@@ -1,0 +1,5 @@
+fastapi[standard]~=0.116.1
+starlette~=0.47.3
+SQLAlchemy~=2.0.43
+APScheduler~=3.11.0
+pydantic~=2.12.0a1

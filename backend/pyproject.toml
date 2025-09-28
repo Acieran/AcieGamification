@@ -16,7 +16,7 @@ exclude = [
 select = ["E", "F", "W", "I", "C", "B", "UP", "RUF", "I001"]
 
 # Ignore the following rules
-ignore = ["PLW0603", "C901", "PLR0911", "PLR0912"]
+ignore = ["PLW0603", "C901", "PLR0911", "PLR0912", "PLR0913"]
 # Enable additional rules
 extend-select = [
     "PL", # Pylint

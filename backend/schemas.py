@@ -48,6 +48,7 @@ class ShiftType(Enum):
     NIGHT = "Night"
     DAY_OFF = "Day Off"
     VACATION = "Vacation"
+    NONE = ""
 
 
 class UserStats(User, Stats):
@@ -101,12 +102,14 @@ class UserCalendarAPI(BaseModel):
     year: int
     user: str
     shift_type: str
+    order: int
 
 
 class CalendarUsersAPI(BaseModel):
     year: int
     month: int
     user: str
+    order: int
 
 
 class UserCalendarAPIAll(BaseModel):

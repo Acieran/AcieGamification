@@ -89,13 +89,27 @@ async def get_calendar(year: int = datetime.now().year, month: int = datetime.no
 
 
 @app.get("/calendar/names")
-async def get_calendar_names(year: int = datetime.now().year, month: int = datetime.now().month):
-    return JSONResponse(service.get_calendar_name(year=year, month=month), status_code=200)
+async def get_calendar_names(
+    year: int = datetime.now().year, month: int = datetime.now().month, order_by: bool | None = None
+):
+    return JSONResponse(
+        service.get_calendar_name(year=year, month=month, order_by=order_by), status_code=200
+    )
 
 
 @app.post("/calendar/names")
-async def create_or_update_calendar_names(calendar_names: CalendarUsersAPI):
-    if service.create_calendar_name(calendar_names.year, calendar_names.month, calendar_names.user):
+async def create_or_update_calendar_names(
+    calendar_names: list[CalendarUsersAPI] | CalendarUsersAPI,
+):
+    if isinstance(calendar_names, CalendarUsersAPI):
+        calendar_names = [calendar_names]
+    success = True
+    for calendar_name in calendar_names:
+        if not service.create_calendar_name(
+            calendar_name.year, calendar_name.month, calendar_name.user, calendar_name.order
+        ):
+            success = False
+    if success:
         return JSONResponse(status_code=200, content="success")
     return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content="There was an error")
 
@@ -116,6 +130,7 @@ async def create_or_update_calendar(data: UserCalendarAPI):
             year=data.year,
             user=data.user,
             shift_type=ShiftType(data.shift_type),
+            order=data.order,
         ):
             return JSONResponse(status_code=200, content="success")
         raise Exception()

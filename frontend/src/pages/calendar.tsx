@@ -3,7 +3,7 @@ import '../Styles/WorkScheduleCalendar.css';
 import {AxiosError} from "axios";
 import type {ScheduleEntry} from "../types.tsx";
 import {deleteCalendarName, getCalendar, getCalendarNames, setCalendar, setCalendarNames} from "../api/calendar.ts";
-import {ScheduleEntrySplitDateClass} from "../api/models.ts";
+import {CalendarUsersAPI, ScheduleEntrySplitDateClass} from "../api/models.ts";
 
 const Calendar: React.FC = () => {
     const [employees, setEmployees] = useState(['Me', 'Him']);
@@ -23,9 +23,8 @@ const Calendar: React.FC = () => {
         setError(null); // Reset previous errors
 
         try {
-            const response = await getCalendar();
-            setSchedule(response); // Update state with fetched data
-            setEmployees(await getCalendarNames())
+            setSchedule(await getCalendar()); // Update state with fetched data
+            setEmployees(await getCalendarNames());
         } catch (err) {
             setError(err as AxiosError); // Handle errors
         } finally {
@@ -39,13 +38,15 @@ const Calendar: React.FC = () => {
 
     // Function to handle changing shifts
     const handleShiftChange = async (
-        date: Date, employee: string, shift: 'Day' | 'Night' | 'Day Off') => {
+        date: Date, employee: string, shift: 'Day' | 'Night' | 'Day Off' | '', order: number) => {
         const response = setCalendar(
             new ScheduleEntrySplitDateClass(
-                undefined, date.getDay(), date.getMonth() + 1, date.getFullYear(), employee, shift))
+                undefined, date.getDate(), date.getMonth() + 1, date.getFullYear(), employee, shift, order))
         if (await response) {
+            let found = false
             const updatedSchedule = schedule.map(entry => {
                 if (entry.date.toDateString() === date.toDateString()) {
+                    found = true;
                     return {
                         ...entry,
                         shifts: {
@@ -56,7 +57,14 @@ const Calendar: React.FC = () => {
                 }
                 return entry;
             });
-
+            if (!found) {
+                updatedSchedule.push({
+                    date: date,
+                    shifts: {
+                        [employee]: shift
+                    }
+                });
+            }
             setSchedule(updatedSchedule);
         } else
             setError(new AxiosError("Error updating calendar"));
@@ -67,7 +75,9 @@ const Calendar: React.FC = () => {
     };
 
     const sendNewUser = async () => {
-        const response = setCalendarNames(currentYear, currentMonth.getMonth(), createUser_User)
+        const response = setCalendarNames(
+            undefined, currentYear, currentMonth.getMonth()+1, createUser_User, employees.length
+        )
         if (await response) {
             employees.push(createUser_User)
             setEmployees(employees);
@@ -77,17 +87,44 @@ const Calendar: React.FC = () => {
             setError(new AxiosError("Error creating new calendar user"));
     }
 
-    const deleteUser = async (user: string) => {
-        const response = deleteCalendarName(currentYear, currentMonth.getMonth(), user);
-        if (await response) {
-            const indexToRemove: number = employees.indexOf(user);
 
-            if (indexToRemove !== -1) { // Check if the element exists
-                employees.splice(indexToRemove, 1); // Removes 1 element at the found index
+
+    const updateUser = async (
+        data?: CalendarUsersAPI[] | CalendarUsersAPI, user?: string, order?: number) => {
+        let response;
+        if (data)
+        {
+            response = setCalendarNames(data)
+        }
+        else {
+            response = setCalendarNames(
+                undefined, currentYear, currentMonth.getMonth()+1, user, order
+            )
+        }
+        if (await response) {
+            return true;
+        }
+        else {
+            setError(new AxiosError("Error updating user"));
+            return false;
+        }
+    }
+
+    const deleteUser = async (user: string, is_remove_index: boolean = true) => {
+        const response = deleteCalendarName(currentYear, currentMonth.getMonth()+1, user);
+        if (await response) {
+            if (is_remove_index) {
+                const indexToRemove: number = employees.indexOf(user);
+
+                if (indexToRemove !== -1) { // Check if the element exists
+                    employees.splice(indexToRemove, 1); // Removes 1 element at the found index
+                }
+                setEmployees(employees);
             }
-            setEmployees(employees);
+            return true;
         } else {
             setError(new AxiosError("Error deleting calendar user"));
+            return false;
         }
     }
 
@@ -124,6 +161,47 @@ const Calendar: React.FC = () => {
     };
 
     const calendarDays = generateCalendarDays();
+
+    const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+        e.dataTransfer.setData('text/plain', index.toString());
+    };
+
+    const handleDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
+        e.currentTarget.classList.remove('dragging');
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
+        e.preventDefault(); // Necessary to allow dropping
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLTableRowElement>) => {
+        e.currentTarget.classList.remove('drop-target');
+    };
+
+    const handleDrop = async (e: React.DragEvent<HTMLTableRowElement>, targetIndex: number) => {
+        let fromIndex = Number(e.dataTransfer.getData('text/plain'));
+        const updatedRecords = [...employees];
+        const [movedItem] = updatedRecords.splice(fromIndex, 1);
+        updatedRecords.splice(targetIndex, 0, movedItem);
+
+        if (fromIndex > targetIndex)
+        {
+            [fromIndex, targetIndex] = [targetIndex, fromIndex];
+        }
+
+        const items_to_update = updatedRecords.slice(fromIndex, targetIndex+1);
+        const items_to_send: CalendarUsersAPI[] = []
+
+        for (let i = 0; i < items_to_update.length; i++)
+        {
+            items_to_send.push(new CalendarUsersAPI(undefined, items_to_update[i], i+fromIndex, currentMonth.getMonth()+1, currentYear))
+        }
+        const response = updateUser(items_to_send);
+        if (await response)
+            setEmployees(updatedRecords);
+        else
+            setError(new AxiosError("Error updating calendar user"));
+    };
 
     return (
         <div className="work-schedule-calendar panel">
@@ -165,9 +243,15 @@ const Calendar: React.FC = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {employees.map(employee => (
+                        {employees.map((employee,index) => (
                             <tr
                                 key={employee}
+                                draggable={true}
+                                onDragStart={(e) => handleDragStart(e, index)}
+                                onDragEnd={handleDragEnd}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => handleDrop(e, index)}
                                 className={hoveredEmployee === employee ? 'highlighted-row' : ''}
                                 onMouseEnter={() => setHoveredEmployee(employee)}
                                 onMouseLeave={() => setHoveredEmployee(null)}
@@ -205,7 +289,8 @@ const Calendar: React.FC = () => {
                                                 onChange={(e) => handleShiftChange(
                                                     day,
                                                     employee,
-                                                    e.target.value as 'Day' | 'Night' | 'Day Off'
+                                                    e.target.value as 'Day' | 'Night' | 'Day Off' | '',
+                                                    index
                                                 )}
                                                 className={`shift-select ${shift.toLowerCase()}`}
                                             >

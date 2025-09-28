@@ -31,12 +31,14 @@ export interface ScheduleEntrySplitDate {
     year: number;
     user: string;
     shift_type: 'Day' | 'Night' | 'Day Off' | '';
+    order: number;
 }
 
 export interface CalendarNames {
     year: number;
     month: number;
     user: string;
+    order: number;
 }
 
 export interface ErrorResponse {
@@ -137,3 +139,8 @@ export type CreateUserQuestResponse = number; // Returns quest_id
 // PUT /{username}/quests/{quest_id}
 export type UpdateUserQuestRequest = CreateUserQuestRequest;
 export type UpdateUserQuestResponse = number; // Returns quest_id
+
+export interface EmployeeOrdered {
+    order: number;
+    name: string;
+}

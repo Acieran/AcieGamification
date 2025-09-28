@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast, get_type_hints
 
-from sqlalchemy import exc, inspect, select
+from sqlalchemy import desc, exc, inspect, select
 from sqlalchemy import inspect as sqlalchemy_inspect
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Mapper, Session
@@ -159,6 +159,7 @@ class BaseRepository:
         model: type[Base],
         offset: int = 0,
         limit: int | None = None,
+        order_by: dict[str, bool] | None = None,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """
@@ -169,6 +170,7 @@ class BaseRepository:
             model: The SQLAlchemy model class to query.
             offset: The offset to start with.
             limit: The number of records to return.
+            order_by: True - Ascending, False - Descending.
             **kwargs: Keyword arguments representing name = value to search for.
                        For example: `username="testuser", email="test@example.com"`
 
@@ -190,6 +192,12 @@ class BaseRepository:
                 query = query.offset(offset)
             if limit is not None:
                 query = query.limit(limit)
+            if order_by is not None:
+                for key, value in order_by.items():
+                    if value:
+                        query = query.order_by(key)
+                    else:
+                        query = query.order_by(desc(key))
 
             # Execute the query and return the results
             result = self._ensure_session().execute(query).scalars().all()

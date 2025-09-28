@@ -162,7 +162,7 @@ class Service:
 
     @log
     def create_or_update_calendar(
-        self, year: int, month: int, day: int, user: str, shift_type: ShiftType
+        self, year: int, month: int, day: int, user: str, shift_type: ShiftType, order: int
     ) -> int | None:
         db_record = self.db_repository.get_by_custom_fields(
             Calendar, year=year, month=month, day=day, user=user
@@ -188,7 +188,7 @@ class Service:
             )
         if (
             self.db_repository.get_by_custom_fields(
-                CalendarNames, year=year, month=month, user=user
+                CalendarNames, year=year, month=month, user=user, order=order
             )
             is None
         ):
@@ -227,16 +227,34 @@ class Service:
             return False
 
     @log
-    def get_calendar_name(self, year, month):
-        return self.db_repository.get_by_custom_fields(CalendarNames, year=year, month=month)
+    def get_calendar_name(self, year: int, month: int, order_by: bool | None = None):
+        order_by_db = None
+        if order_by is not None:
+            if order_by:
+                order_by_db = {f"{CalendarNames.order.key}": True}
+            else:
+                order_by_db = {f"{CalendarNames.order.key}": False}
+        return self.db_repository.get_by_custom_fields(
+            CalendarNames, year=year, month=month, order_by=order_by_db
+        )
 
     @log
-    def create_calendar_name(self, year, month, user):
-        if self.db_repository.get_by_custom_fields(
+    def create_calendar_name(self, year: int, month: int, user: str, order: int) -> int | bool:
+        items = self.db_repository.get_by_custom_fields(
             CalendarNames, year=year, month=month, user=user
-        ):
-            return True
-        return self.db_repository.create(CalendarNames, year=year, month=month, user=user)
+        )
+        if items and len(items) > 0:
+            return self.db_repository.update(
+                model=CalendarNames,
+                item_id=items[0]["id"],
+                year=year,
+                month=month,
+                user=user,
+                order=order,
+            )
+        return self.db_repository.create(
+            CalendarNames, year=year, month=month, user=user, order=order
+        )
 
     @log
     def parse_shift_data(self, file: UploadFile) -> list[dict]:
@@ -253,6 +271,6 @@ class Service:
         items = self.db_repository.get_by_custom_fields(
             CalendarNames, year=year, month=month, user=user
         )
-        if len(items) > 0:
+        if items and len(items) > 0:
             return self.db_repository.delete(CalendarNames, items[0]["id"])
         return True
